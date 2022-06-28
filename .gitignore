@@ -1,0 +1,6 @@
+.serverless/
+venv/
+package.json
+package-lock.json
+node_modules/
+requirements.txt

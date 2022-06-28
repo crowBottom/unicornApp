@@ -1,0 +1,66 @@
+service: serverless-fastapi
+
+provider:
+  name: aws
+  runtime: python3.8
+  logs:
+    httpApi: true
+  stage: dev
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+       - dynamodb:DescribeTable
+       - dynamodb:Query
+       - dynamodb:GetItem
+       - dynamodb:PutItem
+       - dynamodb:UpdateItem
+       - dynamodb:DeleteItem
+       - dynamodb:BatchWriteItem
+       - dynamodb:BatchGetItem
+       - dynamodb:BatchExecuteStatement
+       - dynamodb:Scan
+      Resource:
+        - !GetAtt magicTable.Arn
+
+
+functions:
+  app:
+    handler: app.main.handler
+    events:
+      - httpApi:
+          path: '*'
+
+custom:
+  pythonRequirements:
+    dockerizePip: non-linux
+
+package:
+  patterns:
+    - "!node_modules/**"
+    - "!venv/**"
+    - "!.direnv/**"
+    - "!tests/**"
+
+plugins:
+  - serverless-python-requirements
+
+resources:
+  Resources:
+    magicTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Delete
+      Properties:
+        TableName: magicTable
+        AttributeDefinitions:
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: pk
+            KeyType: HASH
+          - AttributeName: id
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
